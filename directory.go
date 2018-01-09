@@ -1,6 +1,7 @@
 package storagedir
 
 import (
+	"encoding/json"
 	"os"
 
 	"github.com/anothermemory/storage"
@@ -10,21 +11,34 @@ import (
 )
 
 type directoryStorage struct {
-	rootDir string
-	fs      afero.Fs
-	fsUtil  *afero.Afero
+	rootDir  string
+	fs       afero.Fs
+	fsUtil   *afero.Afero
+	inMemory bool
 }
 
 // NewDirectoryStorage creates new storage which uses filesystem to store units
 func NewDirectoryStorage(rootDir string) storage.Storage {
 	fs := afero.NewOsFs()
-	return &directoryStorage{rootDir: rootDir, fs: fs, fsUtil: &afero.Afero{Fs: fs}}
+	return &directoryStorage{rootDir: rootDir, fs: fs, fsUtil: &afero.Afero{Fs: fs}, inMemory: false}
 }
 
 // NewDirectoryInMemoryStorage creates new storage which uses memory to store units
 func NewDirectoryInMemoryStorage() storage.Storage {
 	fs := afero.NewMemMapFs()
-	return &directoryStorage{rootDir: "/anothermemory", fs: fs, fsUtil: &afero.Afero{Fs: fs}}
+	return &directoryStorage{rootDir: "/anothermemory", fs: fs, fsUtil: &afero.Afero{Fs: fs}, inMemory: true}
+}
+
+// NewDirectoryStorageFromJSONConfig creates new storage from it's serialized JSON configuration
+func NewDirectoryStorageFromJSONConfig(b []byte) (storage.Storage, error) {
+	var s directoryStorage
+	err := json.Unmarshal(b, &s)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &s, nil
 }
 
 func (s *directoryStorage) mkdirAll(path string, perm os.FileMode) error {
@@ -89,4 +103,37 @@ func (s *directoryStorage) Create() error {
 
 func (s *directoryStorage) Remove() error {
 	return errors.Wrap(s.removeDir(s.rootDir), "failed to remove storage")
+}
+
+type directoryJSON struct {
+	RootDir string `json:"root"`
+	Memory  bool   `json:"memory"`
+}
+
+func (s *directoryStorage) MarshalJSON() ([]byte, error) {
+	return json.Marshal(directoryJSON{RootDir: s.rootDir, Memory: s.inMemory})
+}
+
+func (s *directoryStorage) UnmarshalJSON(b []byte) error {
+	var jsonData directoryJSON
+	err := json.Unmarshal(b, &jsonData)
+
+	if err != nil {
+		return err
+	}
+
+	s.rootDir = jsonData.RootDir
+	s.inMemory = jsonData.Memory
+
+	var fs afero.Fs
+	if s.inMemory {
+		fs = afero.NewMemMapFs()
+	} else {
+		fs = afero.NewOsFs()
+	}
+
+	s.fs = fs
+	s.fsUtil = &afero.Afero{Fs: fs}
+
+	return nil
 }

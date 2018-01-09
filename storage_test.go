@@ -14,11 +14,7 @@ import (
 )
 
 func TestDirectoryInMemoryStorage(t *testing.T) {
-	storagetests.RunStorageTests(t, createDirectoryInMemoryStorage)
-}
-
-func createDirectoryInMemoryStorage() storage.Storage {
-	return storagedir.NewDirectoryInMemoryStorage()
+	storagetests.RunStorageTests(t, createDirectoryInMemoryStorage, nil)
 }
 
 func TestDirectoryStorage(t *testing.T) {
@@ -28,5 +24,13 @@ func TestDirectoryStorage(t *testing.T) {
 
 	storagetests.RunStorageTests(t, func() storage.Storage {
 		return storagedir.NewDirectoryStorage(path.Join(dir, uuid.NewV4().String()))
-	})
+	}, loadDirectoryStorageFromJSON)
+}
+
+func createDirectoryInMemoryStorage() storage.Storage {
+	return storagedir.NewDirectoryInMemoryStorage()
+}
+
+func loadDirectoryStorageFromJSON(b []byte) (storage.Storage, error) {
+	return storagedir.NewDirectoryStorageFromJSONConfig(b)
 }
