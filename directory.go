@@ -29,6 +29,7 @@ func NewDirectoryInMemoryStorage() storage.Storage {
 	return &directoryStorage{rootDir: "/anothermemory", fs: fs, fsUtil: &afero.Afero{Fs: fs}, inMemory: true}
 }
 
+// NewDirectoryStorageFromJSONConfig creates new storage from it's serialized JSON configuration
 func NewDirectoryStorageFromJSONConfig(b []byte) (storage.Storage, error) {
 	var s directoryStorage
 	err := json.Unmarshal(b, &s)
