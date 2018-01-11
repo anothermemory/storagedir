@@ -10,23 +10,29 @@ import (
 	"github.com/spf13/afero"
 )
 
+// TypeDirectory represents storage type which stores all items in directory
+const TypeDirectory = "directory"
+
+// TypeDirectoryInMemory represents storage type which stores all items in directory stored in memory
+const TypeDirectoryInMemory = "directory_in_memory"
+
 type directoryStorage struct {
-	rootDir  string
-	fs       afero.Fs
-	fsUtil   *afero.Afero
-	inMemory bool
+	rootDir     string
+	fs          afero.Fs
+	fsUtil      *afero.Afero
+	storageType string
 }
 
 // NewDirectoryStorage creates new storage which uses filesystem to store units
 func NewDirectoryStorage(rootDir string) storage.Storage {
 	fs := afero.NewOsFs()
-	return &directoryStorage{rootDir: rootDir, fs: fs, fsUtil: &afero.Afero{Fs: fs}, inMemory: false}
+	return &directoryStorage{rootDir: rootDir, fs: fs, fsUtil: &afero.Afero{Fs: fs}, storageType: TypeDirectory}
 }
 
 // NewDirectoryInMemoryStorage creates new storage which uses memory to store units
 func NewDirectoryInMemoryStorage() storage.Storage {
 	fs := afero.NewMemMapFs()
-	return &directoryStorage{rootDir: "/anothermemory", fs: fs, fsUtil: &afero.Afero{Fs: fs}, inMemory: true}
+	return &directoryStorage{rootDir: "/anothermemory", fs: fs, fsUtil: &afero.Afero{Fs: fs}, storageType: TypeDirectoryInMemory}
 }
 
 // NewDirectoryStorageFromJSONConfig creates new storage from it's serialized JSON configuration
@@ -105,13 +111,17 @@ func (s *directoryStorage) Remove() error {
 	return errors.Wrap(s.removeDir(s.rootDir), "failed to remove storage")
 }
 
+func (s *directoryStorage) Type() string {
+	return s.storageType
+}
+
 type directoryJSON struct {
 	RootDir string `json:"root"`
-	Memory  bool   `json:"memory"`
+	Type    string `json:"type"`
 }
 
 func (s *directoryStorage) MarshalJSON() ([]byte, error) {
-	return json.Marshal(directoryJSON{RootDir: s.rootDir, Memory: s.inMemory})
+	return json.Marshal(directoryJSON{RootDir: s.rootDir, Type: s.storageType})
 }
 
 func (s *directoryStorage) UnmarshalJSON(b []byte) error {
@@ -123,10 +133,10 @@ func (s *directoryStorage) UnmarshalJSON(b []byte) error {
 	}
 
 	s.rootDir = jsonData.RootDir
-	s.inMemory = jsonData.Memory
+	s.storageType = jsonData.Type
 
 	var fs afero.Fs
-	if s.inMemory {
+	if s.storageType == TypeDirectoryInMemory {
 		fs = afero.NewMemMapFs()
 	} else {
 		fs = afero.NewOsFs()
