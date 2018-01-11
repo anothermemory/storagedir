@@ -116,12 +116,16 @@ func (s *directoryStorage) Type() string {
 }
 
 type directoryJSON struct {
+	Config directoryConfigJSON `json:"config"`
+	Type   string              `json:"type"`
+}
+
+type directoryConfigJSON struct {
 	RootDir string `json:"root"`
-	Type    string `json:"type"`
 }
 
 func (s *directoryStorage) MarshalJSON() ([]byte, error) {
-	return json.Marshal(directoryJSON{RootDir: s.rootDir, Type: s.storageType})
+	return json.Marshal(directoryJSON{Config: directoryConfigJSON{RootDir: s.rootDir}, Type: s.storageType})
 }
 
 func (s *directoryStorage) UnmarshalJSON(b []byte) error {
@@ -132,7 +136,7 @@ func (s *directoryStorage) UnmarshalJSON(b []byte) error {
 		return err
 	}
 
-	s.rootDir = jsonData.RootDir
+	s.rootDir = jsonData.Config.RootDir
 	s.storageType = jsonData.Type
 
 	var fs afero.Fs
