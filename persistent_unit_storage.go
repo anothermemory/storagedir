@@ -7,7 +7,7 @@ import (
 )
 
 type persistentUnitStorage interface {
-	storage.Storage
+	storage.Interface
 	mkdirAll(path string, perm os.FileMode) error
 	removeDir(name string) error
 	writeFile(filename string, data []byte, perm os.FileMode) error

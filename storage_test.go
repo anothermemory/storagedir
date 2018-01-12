@@ -22,15 +22,15 @@ func TestDirectoryStorage(t *testing.T) {
 	assert.NoError(t, err)
 	defer os.RemoveAll(dir)
 
-	storagetests.RunStorageTests(t, func() storage.Storage {
+	storagetests.RunStorageTests(t, func() storage.Interface {
 		return storagedir.NewDirectoryStorage(path.Join(dir, uuid.NewV4().String()))
 	}, loadDirectoryStorageFromJSON)
 }
 
-func createDirectoryInMemoryStorage() storage.Storage {
+func createDirectoryInMemoryStorage() storage.Interface {
 	return storagedir.NewDirectoryInMemoryStorage()
 }
 
-func loadDirectoryStorageFromJSON(b []byte) (storage.Storage, error) {
+func loadDirectoryStorageFromJSON(b []byte) (storage.Interface, error) {
 	return storagedir.NewDirectoryStorageFromJSONConfig(b)
 }

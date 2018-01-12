@@ -24,19 +24,19 @@ type directoryStorage struct {
 }
 
 // NewDirectoryStorage creates new storage which uses filesystem to store units
-func NewDirectoryStorage(rootDir string) storage.Storage {
+func NewDirectoryStorage(rootDir string) storage.Interface {
 	fs := afero.NewOsFs()
 	return &directoryStorage{rootDir: rootDir, fs: fs, fsUtil: &afero.Afero{Fs: fs}, storageType: TypeDirectory}
 }
 
 // NewDirectoryInMemoryStorage creates new storage which uses memory to store units
-func NewDirectoryInMemoryStorage() storage.Storage {
+func NewDirectoryInMemoryStorage() storage.Interface {
 	fs := afero.NewMemMapFs()
 	return &directoryStorage{rootDir: "/anothermemory", fs: fs, fsUtil: &afero.Afero{Fs: fs}, storageType: TypeDirectoryInMemory}
 }
 
 // NewDirectoryStorageFromJSONConfig creates new storage from it's serialized JSON configuration
-func NewDirectoryStorageFromJSONConfig(b []byte) (storage.Storage, error) {
+func NewDirectoryStorageFromJSONConfig(b []byte) (storage.Interface, error) {
 	var s directoryStorage
 	err := json.Unmarshal(b, &s)
 
