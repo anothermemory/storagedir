@@ -4,6 +4,8 @@ platform: linux
 inputs:
 - name: git-storagedir
   path: gopath/src/github.com/anothermemory/storagedir
+- name: git-storagetests
+  path: gopath/src/github.com/anothermemory/storagetests
 - name: git-storage
   path: gopath/src/github.com/anothermemory/storage
 - name: git-unit
